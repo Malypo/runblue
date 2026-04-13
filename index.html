@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RunBlue</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    h1 { font-size: 24px; margin-bottom: 24px; }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #185FA5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #status { margin-top: 16px; font-size: 14px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>RunBlue</h1>
+  <button onclick="connexion()">Se connecter avec Google</button>
+  <p id="status"></p>
+
+  <script>
+    const CLIENT_ID = '839214144593-sipnckscvoa5rcpeni5u9nlcakvv70i7.apps.googleusercontent.com';
+    const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+
+    function connexion() {
+      const url = 'https://accounts.google.com/o/oauth2/v2/auth'
+        + '?client_id=' + CLIENT_ID
+        + '&redirect_uri=' + encodeURIComponent('https://malypo.github.io/runblue/')
+        + '&response_type=token'
+        + '&scope=' + encodeURIComponent(SCOPE);
+      window.location.href = url;
+    }
+
+    window.onload = function() {
+      const hash = window.location.hash;
+      if (hash.includes('access_token')) {
+        const token = new URLSearchParams(hash.substring(1)).get('access_token');
+        localStorage.setItem('token', token);
+        document.getElementById('status').textContent = 'Connectée ! Token reçu.';
+      }
+    };
+  </script>
+</body>
+</html>
