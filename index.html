@@ -36,7 +36,6 @@
     .tache-info { flex: 1; }
     .tache-nom { font-size: 15px; color: #222; }
     .tache-nom.done { text-decoration: line-through; color: #aaa; }
-    .tache-cat { font-size: 11px; color: #888; margin-top: 2px; }
     .tache-note { font-size: 11px; color: #aaa; margin-top: 2px; font-style: italic; }
     .vide { text-align: center; color: #aaa; font-size: 14px; padding: 32px; }
 
@@ -52,7 +51,6 @@
     .tache-gestion { background: white; border-radius: 10px; margin-bottom: 8px; padding: 12px; border: 1px solid #e8e8e8; }
     .tache-gestion-top { display: flex; align-items: center; justify-content: space-between; }
     .tache-gestion-nom { font-size: 15px; color: #222; flex: 1; }
-    .tache-gestion-cat { font-size: 11px; color: #888; margin-top: 2px; }
     .tache-gestion-note { font-size: 11px; color: #aaa; margin-top: 2px; font-style: italic; }
     .tache-actions { display: flex; gap: 8px; margin-left: 8px; }
     .btn-edit { background: #e8f0fe; color: #185FA5; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
@@ -82,18 +80,21 @@
     .case.actuelle { background: #185FA5; border-color: #185FA5; color: white; font-weight: 700; font-size: 11px; }
     .case.palier { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
     .case.palier.passee { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
+
+    /* Badges catégorie */
     .badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 10px; color: white; margin-top: 3px; }
     .badge-Me { background: #185FA5; }
-  .badge-Luna { background: #E8760A; }
-  .badge-House { background: #1A7F5A; }
-  .badge-Job { background: #6B3FA0; }
-  .badge-Study { background: #0891B2; }
-  .badge-Sport { background: #059669; }
-  .badge-Friends { background: #B5338A; }
-  .badge-Family { background: #B45309; }
-  .badge-Administratif { background: #555555; }
+    .badge-Luna { background: #E8760A; }
+    .badge-House { background: #1A7F5A; }
+    .badge-Job { background: #6B3FA0; }
+    .badge-Study { background: #0891B2; }
+    .badge-Sport { background: #059669; }
+    .badge-Friends { background: #B5338A; }
+    .badge-Family { background: #B45309; }
+    .badge-Administratif { background: #555555; }
 
-.groupe-titre { font-size: 12px; font-weight: 600; color: white; padding: 4px 10px; border-radius: 8px; margin: 12px 0 6px; display: inline-block; }
+    /* Groupe catégorie */
+    .groupe-titre { font-size: 12px; font-weight: 600; color: white; padding: 4px 10px; border-radius: 8px; margin: 12px 0 6px; display: inline-block; }
   </style>
 </head>
 <body>
@@ -150,11 +151,10 @@
     const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
     const SHEET_ID = '1ddr_EGiigpdQlr7OIYgB15fHlLyGiZE3s4stRTfq7_0';
 
-    // Les cases paliers du plateau (récompenses)
     const PALIERS = [31, 62, 93, 124, 140, 155];
 
     let jourSelectionne = new Date().getDate();
-    let modeFormulaire = null; // 'ajout' ou 'modif'
+    let modeFormulaire = null;
     let ligneModif = null;
 
     // ── Utilitaires ──────────────────────────────────────
@@ -222,75 +222,54 @@
       afficherTaches(rows, debut);
     }
 
-   function afficherTaches(rows, ligneDebut) {
-  const liste = document.getElementById('liste-taches');
-  const taches = rows
-    .map((r, i) => ({ coche: r[0]==='TRUE'||r[0]==='VRAI', cat: r[1]||'', nom: r[2]||'', note: r[3]||'', ligneSheet: ligneDebut + i }))
-    .filter(t => t.nom.trim() !== '');
+    function afficherTaches(rows, ligneDebut) {
+      const liste = document.getElementById('liste-taches');
+      const taches = rows
+        .map((r, i) => ({
+          coche: r[0] === 'TRUE' || r[0] === 'VRAI' || r[0] === true,
+          cat: r[1] || '',
+          nom: r[2] || '',
+          note: r[3] || '',
+          ligneSheet: ligneDebut + i
+        }))
+        .filter(t => t.nom.trim() !== '');
 
-  if (taches.length === 0) {
-    liste.innerHTML = '<div class="vide">Aucune tâche pour aujourd\'hui.</div>';
-    return;
-  }
-
-  const total = taches.length;
-  const cochees = taches.filter(t => t.coche).length;
-  const pct = Math.round((cochees / total) * 100);
-  document.getElementById('header-pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
-
-  // Ordre des catégories
-  const ordre = ['Me','Luna','House','Job','Study','Sport','Friends','Family','Administratif',''];
-  const couleurs = { Me:'#185FA5', Luna:'#E8760A', House:'#1A7F5A', Job:'#6B3FA0', Study:'#0891B2', Sport:'#059669', Friends:'#B5338A', Family:'#B45309', Administratif:'#555555', '':'#999' };
-
-  // Groupement par catégorie
-  const groupes = {};
-  for (const cat of ordre) groupes[cat] = [];
-  for (const t of taches) {
-    const cat = ordre.includes(t.cat) ? t.cat : '';
-    groupes[cat].push(t);
-  }
-
-  let html = '';
-  for (const cat of ordre) {
-    if (groupes[cat].length === 0) continue;
-    const couleur = couleurs[cat] || '#999';
-    html += `<div class="groupe-titre" style="background:${couleur}">${cat || 'Autre'}</div>`;
-    html += groupes[cat].map(t => `
-      <div class="tache" onclick="basculer(${t.ligneSheet}, this)">
-        <div class="check ${t.coche ? 'done' : ''}"></div>
-        <div class="tache-info">
-          <div class="tache-nom ${t.coche ? 'done' : ''}">${t.nom}</div>
-          ${t.note ? `<div class="tache-note">${t.note}</div>` : ''}
-        </div>
-      </div>`).join('');
-  }
-
-  liste.innerHTML = html;
-}
+      if (taches.length === 0) {
+        liste.innerHTML = '<div class="vide">Aucune tâche pour aujourd\'hui.</div>';
+        return;
       }
 
       const total = taches.length;
-      const cochees = taches.filter(r => r[0] === 'TRUE' || r[0] === 'VRAI').length;
+      const cochees = taches.filter(t => t.coche).length;
       const pct = Math.round((cochees / total) * 100);
       document.getElementById('header-pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
 
-      liste.innerHTML = taches.map(r => {
-        const coche = r[0] === 'TRUE' || r[0] === 'VRAI';
-        const cat = r[1] || '';
-        const nom = r[2] || '';
-        const note = r[3] || '';
-        const ligneSheet = ligneDebut + rows.indexOf(r);
+      const ordre = ['Me','Luna','House','Job','Study','Sport','Friends','Family','Administratif',''];
+      const couleurs = { Me:'#185FA5', Luna:'#E8760A', House:'#1A7F5A', Job:'#6B3FA0', Study:'#0891B2', Sport:'#059669', Friends:'#B5338A', Family:'#B45309', Administratif:'#555555', '':'#999' };
 
-        return `
-          <div class="tache" onclick="basculer(${ligneSheet}, this)">
-            <div class="check ${coche ? 'done' : ''}"></div>
+      const groupes = {};
+      for (const cat of ordre) groupes[cat] = [];
+      for (const t of taches) {
+        const cat = ordre.includes(t.cat) ? t.cat : '';
+        groupes[cat].push(t);
+      }
+
+      let html = '';
+      for (const cat of ordre) {
+        if (groupes[cat].length === 0) continue;
+        const couleur = couleurs[cat] || '#999';
+        html += `<div class="groupe-titre" style="background:${couleur}">${cat || 'Autre'}</div>`;
+        html += groupes[cat].map(t => `
+          <div class="tache" onclick="basculer(${t.ligneSheet}, this)">
+            <div class="check ${t.coche ? 'done' : ''}"></div>
             <div class="tache-info">
-              <div class="tache-nom ${coche ? 'done' : ''}">${nom}</div>
-              ${cat ? `<div class="tache-cat">${cat}</div>` : ''}
-              ${note ? `<div class="tache-note">${note}</div>` : ''}
+              <div class="tache-nom ${t.coche ? 'done' : ''}">${t.nom}</div>
+              ${t.note ? `<div class="tache-note">${t.note}</div>` : ''}
             </div>
-          </div>`;
-      }).join('');
+          </div>`).join('');
+      }
+
+      liste.innerHTML = html;
     }
 
     async function basculer(ligneSheet, el) {
@@ -341,7 +320,6 @@
         container.appendChild(btn);
       }
 
-      // Scroll jusqu'au jour sélectionné
       setTimeout(() => {
         const actif = container.querySelector('.active');
         if (actif) actif.scrollIntoView({ inline: 'center', behavior: 'smooth' });
@@ -366,7 +344,7 @@
     function afficherGestion(rows, ligneDebut) {
       const liste = document.getElementById('liste-gestion');
       const taches = rows
-        .map((r, i) => ({ ...r, ligneSheet: ligneDebut + i, r }))
+        .map((r, i) => ({ ...r, ligneSheet: ligneDebut + i }))
         .filter(r => r[2] && r[2].trim() !== '');
 
       if (taches.length === 0) {
@@ -446,7 +424,6 @@
 
       let ligne = ligneModif;
 
-      // En mode ajout, trouve la première ligne vide du bloc
       if (modeFormulaire === 'ajout') {
         const debut = ligneDepart(jourSelectionne) + 1;
         const fin = debut + 14;
@@ -456,7 +433,6 @@
         const data = await response.json();
         const rows = data.values || [];
 
-        // Cherche la première ligne sans tâche
         let indexVide = rows.findIndex(r => !r[2] || r[2].trim() === '');
         if (indexVide === -1) { alert('Plus de place pour ce jour (15 tâches max).'); return; }
         ligne = debut + indexVide;
@@ -510,7 +486,6 @@
       const data = await response.json();
       const rows = data.values || [];
 
-      // Prend le dernier cumul non vide
       let score = 0;
       for (const row of rows) {
         if (row[0] !== undefined && row[0] !== '') {
@@ -528,8 +503,6 @@
 
       for (let i = 1; i <= 155; i++) {
         const div = document.createElement('div');
-        div.className = 'case';
-
         const estPalier = PALIERS.includes(i);
         const estPassee = i < score;
         const estActuelle = i === score;
@@ -538,6 +511,7 @@
         else if (estPalier && estPassee) div.className = 'case palier passee';
         else if (estPalier) div.className = 'case palier';
         else if (estPassee) div.className = 'case passee';
+        else div.className = 'case';
 
         div.textContent = estActuelle ? '★' : (estPalier ? '!' : i);
         grille.appendChild(div);
