@@ -5,28 +5,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RunBlue</title>
   <style>
-    body { font-family: sans-serif; padding: 16px; background: #f5f5f5; }
-    button { padding: 12px 24px; font-size: 16px; background: #185FA5; color: white; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 16px; }
-    #output { background: white; padding: 12px; border-radius: 8px; font-size: 13px; white-space: pre-wrap; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f0f0; max-width: 480px; margin: 0 auto; }
+
+    /* Header */
+    .header { background: white; padding: 16px; border-bottom: 1px solid #e0e0e0; }
+    .header h1 { font-size: 20px; font-weight: 600; color: #185FA5; }
+    .header .date { font-size: 13px; color: #888; margin-top: 2px; }
+    .header .pct { font-size: 13px; color: #185FA5; font-weight: 500; margin-top: 4px; }
+
+    /* Bouton connexion */
+    .btn-connexion { display: block; margin: 16px; padding: 12px; background: #185FA5; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: calc(100% - 32px); }
+
+    /* Liste tâches */
+    .liste { padding: 12px; }
+    .tache { background: white; border-radius: 10px; margin-bottom: 8px; padding: 14px 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 1px solid #e8e8e8; }
+    .tache:active { background: #f5f5f5; }
+
+    /* Case à cocher */
+    .check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ccc; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .check.done { background: #185FA5; border-color: #185FA5; }
+    .check.done::after { content: '✓'; color: white; font-size: 14px; }
+
+    /* Contenu tâche */
+    .tache-info { flex: 1; }
+    .tache-nom { font-size: 15px; color: #222; }
+    .tache-nom.done { text-decoration: line-through; color: #aaa; }
+    .tache-cat { font-size: 11px; color: #888; margin-top: 2px; }
+    .tache-note { font-size: 11px; color: #aaa; margin-top: 2px; font-style: italic; }
+
+    /* Message vide */
+    .vide { text-align: center; color: #aaa; font-size: 14px; padding: 32px; }
   </style>
 </head>
 <body>
-  <h1>RunBlue</h1>
-  <button onclick="connexion()">Se connecter avec Google</button>
-  <button onclick="lireTaches()">Lire les tâches</button>
-  <div id="output">En attente...</div>
+
+  <div class="header">
+    <h1>RunBlue</h1>
+    <div class="date" id="date">Chargement...</div>
+    <div class="pct" id="pct"></div>
+  </div>
+
+  <button class="btn-connexion" onclick="connexion()" id="btn-co" style="display:none">
+    Se connecter avec Google
+  </button>
+
+  <div class="liste" id="liste">
+    <div class="vide">Chargement des tâches...</div>
+  </div>
 
   <script>
     const CLIENT_ID = '839214144593-sipnckscvoa5rcpeni5u9nlcakvv70i7.apps.googleusercontent.com';
     const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
     const SHEET_ID = '1ddr_EGiigpdQlr7OIYgB15fHlLyGiZE3s4stRTfq7_0';
 
-    // Récupère le token stocké dans le navigateur
+    // Calcule la ligne de départ selon le jour du mois
+    function ligneDepart() {
+      const jour = new Date().getDate();
+      return 5 + (jour - 1) * 18;
+    }
+
     function getToken() {
       return localStorage.getItem('token');
     }
 
-    // Redirige vers Google pour la connexion
     function connexion() {
       const url = 'https://accounts.google.com/o/oauth2/v2/auth'
         + '?client_id=' + CLIENT_ID
@@ -36,15 +78,25 @@
       window.location.href = url;
     }
 
-    // Lit les lignes 6 à 16 de l'onglet Objectifs (les tâches du jour 1)
-    async function lireTaches() {
+    // Affiche la date du jour dans le header
+    function afficherDate() {
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      const date = new Date().toLocaleDateString('fr-FR', options);
+      document.getElementById('date').textContent = date;
+    }
+
+    // Lit et affiche les tâches du jour
+    async function chargerTaches() {
       const token = getToken();
       if (!token) {
-        document.getElementById('output').textContent = 'Non connectée. Cliquez sur Se connecter.';
+        document.getElementById('btn-co').style.display = 'block';
+        document.getElementById('liste').innerHTML = '<div class="vide">Connectez-vous pour voir vos tâches.</div>';
         return;
       }
 
-      const plage = 'Objectifs!A6:D16';
+      const debut = ligneDepart() + 1; // ligne première tâche
+      const fin = debut + 14;          // 15 tâches max
+      const plage = `Objectifs!A${debut}:D${fin}`;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
 
       const response = await fetch(url, {
@@ -52,17 +104,106 @@
       });
 
       const data = await response.json();
-      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+
+      // Si token expiré
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        document.getElementById('btn-co').style.display = 'block';
+        document.getElementById('liste').innerHTML = '<div class="vide">Session expirée. Reconnectez-vous.</div>';
+        return;
+      }
+
+      const rows = data.values || [];
+      afficherTaches(rows, debut);
     }
 
-    // Au chargement, récupère le token si Google l'a renvoyé dans l'URL
+    // Construit l'affichage des tâches
+    function afficherTaches(rows, ligneDebut) {
+      const liste = document.getElementById('liste');
+
+      // Filtre les lignes vides (pas de nom de tâche)
+      const taches = rows.filter(r => r[2] && r[2].trim() !== '');
+
+      if (taches.length === 0) {
+        liste.innerHTML = '<div class="vide">Aucune tâche pour aujourd\'hui.</div>';
+        return;
+      }
+
+      // Calcule le pourcentage
+      const total = taches.length;
+      const cochees = taches.filter(r => r[0] === 'TRUE').length;
+      const pct = Math.round((cochees / total) * 100);
+      document.getElementById('pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
+
+      // Génère le HTML de chaque tâche
+      liste.innerHTML = taches.map((r, i) => {
+        const coche = r[0] === 'TRUE';
+        const cat = r[1] || '';
+        const nom = r[2] || '';
+        const note = r[3] || '';
+        // La ligne réelle dans le sheet pour cette tâche
+        const ligneSheet = ligneDebut + rows.indexOf(r);
+
+        return `
+          <div class="tache" onclick="basculer(${ligneSheet}, ${i}, this)">
+            <div class="check ${coche ? 'done' : ''}"></div>
+            <div class="tache-info">
+              <div class="tache-nom ${coche ? 'done' : ''}">${nom}</div>
+              ${cat ? `<div class="tache-cat">${cat}</div>` : ''}
+              ${note ? `<div class="tache-note">${note}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Coche ou décoche une tâche et met à jour le Spreadsheet
+    async function basculer(ligneSheet, index, el) {
+      const token = getToken();
+      const check = el.querySelector('.check');
+      const nom = el.querySelector('.tache-nom');
+      const estCoche = check.classList.contains('done');
+      const nouvelleValeur = !estCoche;
+
+      // Mise à jour visuelle immédiate
+      check.classList.toggle('done', nouvelleValeur);
+      nom.classList.toggle('done', nouvelleValeur);
+
+      // Mise à jour dans le Spreadsheet
+      const plage = `Objectifs!A${ligneSheet}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`;
+
+      await fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          range: plage,
+          majorDimension: 'ROWS',
+          values: [[nouvelleValeur ? 'TRUE' : 'FALSE']]
+        })
+      });
+
+      // Recalcule le pourcentage affiché
+      const taches = document.querySelectorAll('.tache');
+      const total = taches.length;
+      const cochees = document.querySelectorAll('.check.done').length;
+      const pct = Math.round((cochees / total) * 100);
+      document.getElementById('pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
+    }
+
+    // Au chargement de la page
     window.onload = function() {
+      // Récupère le token si Google l'a renvoyé dans l'URL
       const hash = window.location.hash;
       if (hash.includes('access_token')) {
         const token = new URLSearchParams(hash.substring(1)).get('access_token');
         localStorage.setItem('token', token);
-        document.getElementById('output').textContent = 'Connectée ! Token reçu.';
+        window.location.hash = '';
       }
+      afficherDate();
+      chargerTaches();
     };
   </script>
 </body>
