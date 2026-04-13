@@ -5,38 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RunBlue</title>
   <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    h1 { font-size: 24px; margin-bottom: 24px; }
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      background: #185FA5;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #status { margin-top: 16px; font-size: 14px; color: #555; }
+    body { font-family: sans-serif; padding: 16px; background: #f5f5f5; }
+    button { padding: 12px 24px; font-size: 16px; background: #185FA5; color: white; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 16px; }
+    #output { background: white; padding: 12px; border-radius: 8px; font-size: 13px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
   <h1>RunBlue</h1>
   <button onclick="connexion()">Se connecter avec Google</button>
-  <p id="status"></p>
+  <button onclick="lireTaches()">Lire les tâches</button>
+  <div id="output">En attente...</div>
 
   <script>
     const CLIENT_ID = '839214144593-sipnckscvoa5rcpeni5u9nlcakvv70i7.apps.googleusercontent.com';
     const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+    const SHEET_ID = '1ddr_EGiigpdQlr7OIYgB15fHlLyGiZE3s4stRTfq7_0';
 
+    // Récupère le token stocké dans le navigateur
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    // Redirige vers Google pour la connexion
     function connexion() {
       const url = 'https://accounts.google.com/o/oauth2/v2/auth'
         + '?client_id=' + CLIENT_ID
@@ -46,12 +36,32 @@
       window.location.href = url;
     }
 
+    // Lit les lignes 6 à 16 de l'onglet Objectifs (les tâches du jour 1)
+    async function lireTaches() {
+      const token = getToken();
+      if (!token) {
+        document.getElementById('output').textContent = 'Non connectée. Cliquez sur Se connecter.';
+        return;
+      }
+
+      const plage = 'Objectifs!A6:D16';
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
+
+      const response = await fetch(url, {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+
+      const data = await response.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Au chargement, récupère le token si Google l'a renvoyé dans l'URL
     window.onload = function() {
       const hash = window.location.hash;
       if (hash.includes('access_token')) {
         const token = new URLSearchParams(hash.substring(1)).get('access_token');
         localStorage.setItem('token', token);
-        document.getElementById('status').textContent = 'Connectée ! Token reçu.';
+        document.getElementById('output').textContent = 'Connectée ! Token reçu.';
       }
     };
   </script>
