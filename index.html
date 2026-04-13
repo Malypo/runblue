@@ -6,67 +6,151 @@
   <title>RunBlue</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #f0f0f0; max-width: 480px; margin: 0 auto; }
+    body { font-family: sans-serif; background: #f0f0f0; max-width: 480px; margin: 0 auto; padding-bottom: 70px; }
 
     /* Header */
-    .header { background: white; padding: 16px; border-bottom: 1px solid #e0e0e0; }
+    .header { background: white; padding: 16px; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 10; }
     .header h1 { font-size: 20px; font-weight: 600; color: #185FA5; }
     .header .date { font-size: 13px; color: #888; margin-top: 2px; }
     .header .pct { font-size: 13px; color: #185FA5; font-weight: 500; margin-top: 4px; }
 
+    /* Navigation bas */
+    .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; border-top: 1px solid #e0e0e0; display: flex; z-index: 20; }
+    .nav-btn { flex: 1; padding: 12px 0; font-size: 12px; color: #888; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .nav-btn.active { color: #185FA5; font-weight: 500; }
+    .nav-icon { font-size: 20px; }
+
+    /* Vues */
+    .vue { display: none; padding: 12px; }
+    .vue.active { display: block; }
+
     /* Bouton connexion */
-    .btn-connexion { display: block; margin: 16px; padding: 12px; background: #185FA5; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: calc(100% - 32px); }
+    .btn-connexion { display: block; margin: 16px 0; padding: 12px; background: #185FA5; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; }
 
-    /* Liste tâches */
-    .liste { padding: 12px; }
-    .tache { background: white; border-radius: 10px; margin-bottom: 8px; padding: 14px 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; border: 1px solid #e8e8e8; }
+    /* Tâches */
+    .tache { background: white; border-radius: 10px; margin-bottom: 8px; padding: 14px 12px; display: flex; align-items: center; gap: 12px; border: 1px solid #e8e8e8; }
     .tache:active { background: #f5f5f5; }
-
-    /* Case à cocher */
-    .check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ccc; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ccc; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; cursor: pointer; }
     .check.done { background: #185FA5; border-color: #185FA5; }
     .check.done::after { content: '✓'; color: white; font-size: 14px; }
-
-    /* Contenu tâche */
     .tache-info { flex: 1; }
     .tache-nom { font-size: 15px; color: #222; }
     .tache-nom.done { text-decoration: line-through; color: #aaa; }
     .tache-cat { font-size: 11px; color: #888; margin-top: 2px; }
     .tache-note { font-size: 11px; color: #aaa; margin-top: 2px; font-style: italic; }
-
-    /* Message vide */
     .vide { text-align: center; color: #aaa; font-size: 14px; padding: 32px; }
+
+    /* Sélecteur de jour */
+    .jours { display: flex; overflow-x: auto; gap: 8px; padding: 4px 0 12px; scrollbar-width: none; }
+    .jours::-webkit-scrollbar { display: none; }
+    .jour-btn { min-width: 36px; height: 36px; border-radius: 50%; border: 1px solid #e0e0e0; background: white; font-size: 13px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .jour-btn.active { background: #185FA5; color: white; border-color: #185FA5; }
+    .jour-btn.today { border-color: #185FA5; color: #185FA5; font-weight: 600; }
+    .jour-btn.today.active { color: white; }
+
+    /* Tâche gestion */
+    .tache-gestion { background: white; border-radius: 10px; margin-bottom: 8px; padding: 12px; border: 1px solid #e8e8e8; }
+    .tache-gestion-top { display: flex; align-items: center; justify-content: space-between; }
+    .tache-gestion-nom { font-size: 15px; color: #222; flex: 1; }
+    .tache-gestion-cat { font-size: 11px; color: #888; margin-top: 2px; }
+    .tache-gestion-note { font-size: 11px; color: #aaa; margin-top: 2px; font-style: italic; }
+    .tache-actions { display: flex; gap: 8px; margin-left: 8px; }
+    .btn-edit { background: #e8f0fe; color: #185FA5; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+    .btn-del { background: #fce8e6; color: #c5221f; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+
+    /* Formulaire ajout/modif */
+    .formulaire { background: white; border-radius: 10px; padding: 16px; margin-bottom: 12px; border: 1px solid #e8e8e8; }
+    .formulaire h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #222; }
+    .champ { margin-bottom: 10px; }
+    .champ label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+    .champ input, .champ select { width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: #fafafa; }
+    .champ input:focus, .champ select:focus { outline: none; border-color: #185FA5; }
+    .form-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-save { flex: 1; padding: 10px; background: #185FA5; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    .btn-cancel { padding: 10px 16px; background: #f0f0f0; color: #555; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+
+    /* Bouton ajouter */
+    .btn-ajouter { width: 100%; padding: 12px; background: white; color: #185FA5; border: 2px dashed #185FA5; border-radius: 10px; font-size: 15px; cursor: pointer; margin-top: 4px; }
+
+    /* Plateau */
+    .plateau-header { background: white; border-radius: 10px; padding: 16px; margin-bottom: 12px; border: 1px solid #e8e8e8; text-align: center; }
+    .plateau-score { font-size: 36px; font-weight: 700; color: #185FA5; }
+    .plateau-label { font-size: 13px; color: #888; margin-top: 4px; }
+    .plateau-grille { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+    .case { aspect-ratio: 1; border-radius: 6px; background: white; border: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #bbb; }
+    .case.passee { background: #dbeafe; border-color: #93c5fd; color: #185FA5; }
+    .case.actuelle { background: #185FA5; border-color: #185FA5; color: white; font-weight: 700; font-size: 11px; }
+    .case.palier { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+    .case.palier.passee { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
   </style>
 </head>
 <body>
 
   <div class="header">
     <h1>RunBlue</h1>
-    <div class="date" id="date">Chargement...</div>
-    <div class="pct" id="pct"></div>
+    <div class="date" id="header-date">Chargement...</div>
+    <div class="pct" id="header-pct"></div>
   </div>
 
-  <button class="btn-connexion" onclick="connexion()" id="btn-co" style="display:none">
-    Se connecter avec Google
-  </button>
-
-  <div class="liste" id="liste">
-    <div class="vide">Chargement des tâches...</div>
+  <!-- Vue Aujourd'hui -->
+  <div class="vue active" id="vue-aujourd-hui">
+    <button class="btn-connexion" onclick="connexion()" id="btn-co" style="display:none">
+      Se connecter avec Google
+    </button>
+    <div id="liste-taches"><div class="vide">Chargement...</div></div>
   </div>
+
+  <!-- Vue Gérer -->
+  <div class="vue" id="vue-gerer">
+    <div class="jours" id="selecteur-jours"></div>
+    <div id="formulaire-container"></div>
+    <div id="liste-gestion"><div class="vide">Chargement...</div></div>
+    <button class="btn-ajouter" onclick="ouvrirFormulaire()">+ Ajouter une tâche</button>
+  </div>
+
+  <!-- Vue Plateau -->
+  <div class="vue" id="vue-plateau">
+    <div class="plateau-header">
+      <div class="plateau-score" id="plateau-score">-</div>
+      <div class="plateau-label">points cumulés</div>
+    </div>
+    <div class="plateau-grille" id="plateau-grille"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <button class="nav-btn active" onclick="allerVue('aujourd-hui', this)">
+      <span class="nav-icon">☑</span>
+      Aujourd'hui
+    </button>
+    <button class="nav-btn" onclick="allerVue('gerer', this)">
+      <span class="nav-icon">✏</span>
+      Gérer
+    </button>
+    <button class="nav-btn" onclick="allerVue('plateau', this)">
+      <span class="nav-icon">🎮</span>
+      Plateau
+    </button>
+  </nav>
 
   <script>
     const CLIENT_ID = '839214144593-sipnckscvoa5rcpeni5u9nlcakvv70i7.apps.googleusercontent.com';
     const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
     const SHEET_ID = '1ddr_EGiigpdQlr7OIYgB15fHlLyGiZE3s4stRTfq7_0';
 
-    // Calcule la ligne de départ selon le jour du mois
-    function ligneDepart() {
-      const jour = new Date().getDate();
-      return 5 + (jour - 1) * 18;
-    }
+    // Les cases paliers du plateau (récompenses)
+    const PALIERS = [31, 62, 93, 124, 140, 155];
 
-    function getToken() {
-      return localStorage.getItem('token');
+    let jourSelectionne = new Date().getDate();
+    let modeFormulaire = null; // 'ajout' ou 'modif'
+    let ligneModif = null;
+
+    // ── Utilitaires ──────────────────────────────────────
+
+    function getToken() { return localStorage.getItem('token'); }
+
+    function ligneDepart(jour) {
+      return 5 + (jour - 1) * 18;
     }
 
     function connexion() {
@@ -78,50 +162,56 @@
       window.location.href = url;
     }
 
-    // Affiche la date du jour dans le header
     function afficherDate() {
       const options = { weekday: 'long', day: 'numeric', month: 'long' };
-      const date = new Date().toLocaleDateString('fr-FR', options);
-      document.getElementById('date').textContent = date;
+      document.getElementById('header-date').textContent =
+        new Date().toLocaleDateString('fr-FR', options);
     }
 
-    // Lit et affiche les tâches du jour
+    // ── Navigation ───────────────────────────────────────
+
+    function allerVue(nom, btn) {
+      document.querySelectorAll('.vue').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('vue-' + nom).classList.add('active');
+      btn.classList.add('active');
+
+      if (nom === 'gerer') chargerGestion(jourSelectionne);
+      if (nom === 'plateau') chargerPlateau();
+    }
+
+    // ── Vue Aujourd'hui ──────────────────────────────────
+
     async function chargerTaches() {
       const token = getToken();
       if (!token) {
         document.getElementById('btn-co').style.display = 'block';
-        document.getElementById('liste').innerHTML = '<div class="vide">Connectez-vous pour voir vos tâches.</div>';
+        document.getElementById('liste-taches').innerHTML = '<div class="vide">Connectez-vous pour voir vos tâches.</div>';
         return;
       }
 
-      const debut = ligneDepart() + 1; // ligne première tâche
-      const fin = debut + 14;          // 15 tâches max
+      const jour = new Date().getDate();
+      const debut = ligneDepart(jour) + 1;
+      const fin = debut + 14;
       const plage = `Objectifs!A${debut}:D${fin}`;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
 
-      const response = await fetch(url, {
-        headers: { Authorization: 'Bearer ' + token }
-      });
+      const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
 
-      const data = await response.json();
-
-      // Si token expiré
       if (response.status === 401) {
         localStorage.removeItem('token');
         document.getElementById('btn-co').style.display = 'block';
-        document.getElementById('liste').innerHTML = '<div class="vide">Session expirée. Reconnectez-vous.</div>';
+        document.getElementById('liste-taches').innerHTML = '<div class="vide">Session expirée. Reconnectez-vous.</div>';
         return;
       }
 
+      const data = await response.json();
       const rows = data.values || [];
       afficherTaches(rows, debut);
     }
 
-    // Construit l'affichage des tâches
     function afficherTaches(rows, ligneDebut) {
-      const liste = document.getElementById('liste');
-
-      // Filtre les lignes vides (pas de nom de tâche)
+      const liste = document.getElementById('liste-taches');
       const taches = rows.filter(r => r[2] && r[2].trim() !== '');
 
       if (taches.length === 0) {
@@ -129,23 +219,20 @@
         return;
       }
 
-      // Calcule le pourcentage
       const total = taches.length;
       const cochees = taches.filter(r => r[0] === 'TRUE' || r[0] === 'VRAI').length;
       const pct = Math.round((cochees / total) * 100);
-      document.getElementById('pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
+      document.getElementById('header-pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
 
-      // Génère le HTML de chaque tâche
-      liste.innerHTML = taches.map((r, i) => {
-        const coche = r[0] === 'TRUE'|| r[0] === 'VRAI';
+      liste.innerHTML = taches.map(r => {
+        const coche = r[0] === 'TRUE' || r[0] === 'VRAI';
         const cat = r[1] || '';
         const nom = r[2] || '';
         const note = r[3] || '';
-        // La ligne réelle dans le sheet pour cette tâche
         const ligneSheet = ligneDebut + rows.indexOf(r);
 
         return `
-          <div class="tache" onclick="basculer(${ligneSheet}, ${i}, this)">
+          <div class="tache" onclick="basculer(${ligneSheet}, this)">
             <div class="check ${coche ? 'done' : ''}"></div>
             <div class="tache-info">
               <div class="tache-nom ${coche ? 'done' : ''}">${nom}</div>
@@ -156,46 +243,260 @@
       }).join('');
     }
 
-    // Coche ou décoche une tâche et met à jour le Spreadsheet
-    async function basculer(ligneSheet, index, el) {
+    async function basculer(ligneSheet, el) {
       const token = getToken();
       const check = el.querySelector('.check');
       const nom = el.querySelector('.tache-nom');
       const estCoche = check.classList.contains('done');
       const nouvelleValeur = !estCoche;
 
-      // Mise à jour visuelle immédiate
       check.classList.toggle('done', nouvelleValeur);
       nom.classList.toggle('done', nouvelleValeur);
 
-      // Mise à jour dans le Spreadsheet
       const plage = `Objectifs!A${ligneSheet}`;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`;
 
       await fetch(url, {
         method: 'PUT',
-        headers: {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          range: plage,
-          majorDimension: 'ROWS',
-          values: [[nouvelleValeur ? true : false]]
-        })
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ range: plage, majorDimension: 'ROWS', values: [[nouvelleValeur]] })
       });
 
-      // Recalcule le pourcentage affiché
       const taches = document.querySelectorAll('.tache');
       const total = taches.length;
       const cochees = document.querySelectorAll('.check.done').length;
       const pct = Math.round((cochees / total) * 100);
-      document.getElementById('pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
+      document.getElementById('header-pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
     }
 
-    // Au chargement de la page
+    // ── Vue Gérer ────────────────────────────────────────
+
+    function construireSeleteurJours() {
+      const aujourd = new Date().getDate();
+      const dernierJour = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+      const container = document.getElementById('selecteur-jours');
+      container.innerHTML = '';
+
+      for (let j = 1; j <= dernierJour; j++) {
+        const btn = document.createElement('button');
+        btn.className = 'jour-btn' + (j === aujourd ? ' today' : '') + (j === jourSelectionne ? ' active' : '');
+        btn.textContent = j;
+        btn.onclick = () => {
+          jourSelectionne = j;
+          document.querySelectorAll('.jour-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          fermerFormulaire();
+          chargerGestion(j);
+        };
+        container.appendChild(btn);
+      }
+
+      // Scroll jusqu'au jour sélectionné
+      setTimeout(() => {
+        const actif = container.querySelector('.active');
+        if (actif) actif.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+      }, 100);
+    }
+
+    async function chargerGestion(jour) {
+      const token = getToken();
+      if (!token) return;
+
+      const debut = ligneDepart(jour) + 1;
+      const fin = debut + 14;
+      const plage = `Objectifs!A${debut}:D${fin}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
+
+      const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+      const data = await response.json();
+      const rows = data.values || [];
+      afficherGestion(rows, debut);
+    }
+
+    function afficherGestion(rows, ligneDebut) {
+      const liste = document.getElementById('liste-gestion');
+      const taches = rows
+        .map((r, i) => ({ ...r, ligneSheet: ligneDebut + i, r }))
+        .filter(r => r[2] && r[2].trim() !== '');
+
+      if (taches.length === 0) {
+        liste.innerHTML = '<div class="vide">Aucune tâche ce jour.</div>';
+        return;
+      }
+
+      liste.innerHTML = taches.map(t => `
+        <div class="tache-gestion">
+          <div class="tache-gestion-top">
+            <div class="tache-info">
+              <div class="tache-gestion-nom">${t[2] || ''}</div>
+              ${t[1] ? `<div class="tache-gestion-cat">${t[1]}</div>` : ''}
+              ${t[3] ? `<div class="tache-gestion-note">${t[3]}</div>` : ''}
+            </div>
+            <div class="tache-actions">
+              <button class="btn-edit" onclick="ouvrirModif(${t.ligneSheet}, '${(t[2]||'').replace(/'/g,"\\'")}', '${(t[1]||'').replace(/'/g,"\\'")}', '${(t[3]||'').replace(/'/g,"\\'")}')">Modifier</button>
+              <button class="btn-del" onclick="supprimerTache(${t.ligneSheet})">Supprimer</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function ouvrirFormulaire(nom='', cat='', note='') {
+      modeFormulaire = 'ajout';
+      ligneModif = null;
+      afficherFormulaire('Ajouter une tâche', nom, cat, note);
+    }
+
+    function ouvrirModif(ligne, nom, cat, note) {
+      modeFormulaire = 'modif';
+      ligneModif = ligne;
+      afficherFormulaire('Modifier la tâche', nom, cat, note);
+    }
+
+    function afficherFormulaire(titre, nom, cat, note) {
+      document.getElementById('formulaire-container').innerHTML = `
+        <div class="formulaire">
+          <h3>${titre}</h3>
+          <div class="champ">
+            <label>Tâche</label>
+            <input type="text" id="f-nom" value="${nom}" placeholder="Ex: Laver le chien" />
+          </div>
+          <div class="champ">
+            <label>Catégorie</label>
+            <select id="f-cat">
+              <option value="">— Aucune —</option>
+              ${['Luna','Me','House','Friends','Job'].map(c =>
+                `<option value="${c}" ${cat===c?'selected':''}>${c}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="champ">
+            <label>Note (optionnel)</label>
+            <input type="text" id="f-note" value="${note}" placeholder="Ex: Avec le shampooing spécial" />
+          </div>
+          <div class="form-actions">
+            <button class="btn-cancel" onclick="fermerFormulaire()">Annuler</button>
+            <button class="btn-save" onclick="sauvegarderTache()">Enregistrer</button>
+          </div>
+        </div>`;
+    }
+
+    function fermerFormulaire() {
+      document.getElementById('formulaire-container').innerHTML = '';
+      modeFormulaire = null;
+      ligneModif = null;
+    }
+
+    async function sauvegarderTache() {
+      const token = getToken();
+      const nom = document.getElementById('f-nom').value.trim();
+      const cat = document.getElementById('f-cat').value;
+      const note = document.getElementById('f-note').value.trim();
+
+      if (!nom) { alert('Le nom de la tâche est obligatoire.'); return; }
+
+      let ligne = ligneModif;
+
+      // En mode ajout, trouve la première ligne vide du bloc
+      if (modeFormulaire === 'ajout') {
+        const debut = ligneDepart(jourSelectionne) + 1;
+        const fin = debut + 14;
+        const plage = `Objectifs!A${debut}:D${fin}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
+        const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+        const data = await response.json();
+        const rows = data.values || [];
+
+        // Cherche la première ligne sans tâche
+        let indexVide = rows.findIndex(r => !r[2] || r[2].trim() === '');
+        if (indexVide === -1) { alert('Plus de place pour ce jour (15 tâches max).'); return; }
+        ligne = debut + indexVide;
+      }
+
+      const plage = `Objectifs!A${ligne}:D${ligne}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`;
+
+      await fetch(url, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          range: plage,
+          majorDimension: 'ROWS',
+          values: [[false, cat, nom, note]]
+        })
+      });
+
+      fermerFormulaire();
+      chargerGestion(jourSelectionne);
+    }
+
+    async function supprimerTache(ligneSheet) {
+      if (!confirm('Supprimer cette tâche ?')) return;
+      const token = getToken();
+      const plage = `Objectifs!A${ligneSheet}:D${ligneSheet}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`;
+
+      await fetch(url, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          range: plage,
+          majorDimension: 'ROWS',
+          values: [[false, '', '', '']]
+        })
+      });
+
+      chargerGestion(jourSelectionne);
+    }
+
+    // ── Vue Plateau ──────────────────────────────────────
+
+    async function chargerPlateau() {
+      const token = getToken();
+      if (!token) return;
+
+      const plage = 'Recap!D7:D37';
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
+      const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+      const data = await response.json();
+      const rows = data.values || [];
+
+      // Prend le dernier cumul non vide
+      let score = 0;
+      for (const row of rows) {
+        if (row[0] !== undefined && row[0] !== '') {
+          score = parseInt(row[0]) || 0;
+        }
+      }
+
+      document.getElementById('plateau-score').textContent = score;
+      afficherPlateau(score);
+    }
+
+    function afficherPlateau(score) {
+      const grille = document.getElementById('plateau-grille');
+      grille.innerHTML = '';
+
+      for (let i = 1; i <= 155; i++) {
+        const div = document.createElement('div');
+        div.className = 'case';
+
+        const estPalier = PALIERS.includes(i);
+        const estPassee = i < score;
+        const estActuelle = i === score;
+
+        if (estActuelle) div.className = 'case actuelle';
+        else if (estPalier && estPassee) div.className = 'case palier passee';
+        else if (estPalier) div.className = 'case palier';
+        else if (estPassee) div.className = 'case passee';
+
+        div.textContent = estActuelle ? '★' : (estPalier ? '!' : i);
+        grille.appendChild(div);
+      }
+    }
+
+    // ── Initialisation ───────────────────────────────────
+
     window.onload = function() {
-      // Récupère le token si Google l'a renvoyé dans l'URL
       const hash = window.location.hash;
       if (hash.includes('access_token')) {
         const token = new URLSearchParams(hash.substring(1)).get('access_token');
@@ -204,6 +505,7 @@
       }
       afficherDate();
       chargerTaches();
+      construireSeleteurJours();
     };
   </script>
 </body>
