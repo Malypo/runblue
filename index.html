@@ -131,13 +131,13 @@
 
       // Calcule le pourcentage
       const total = taches.length;
-      const cochees = taches.filter(r => r[0] === 'TRUE').length;
+      const cochees = taches.filter(r => r[0] === 'TRUE' || r[0] === 'VRAI').length;
       const pct = Math.round((cochees / total) * 100);
       document.getElementById('pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
 
       // Génère le HTML de chaque tâche
       liste.innerHTML = taches.map((r, i) => {
-        const coche = r[0] === 'TRUE';
+        const coche = r[0] === 'TRUE'|| r[0] === 'VRAI';
         const cat = r[1] || '';
         const nom = r[2] || '';
         const note = r[3] || '';
@@ -181,7 +181,7 @@
         body: JSON.stringify({
           range: plage,
           majorDimension: 'ROWS',
-          values: [[nouvelleValeur ? 'TRUE' : 'FALSE']]
+          values: [[nouvelleValeur ? 'VRAI' : 'FAUX']]
         })
       });
 
