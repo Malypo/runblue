@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #f0f0f0; max-width: 480px; margin: 0 auto; padding-bottom: 70px; }
+    body { font-family: sans-serif; background: #f0f0f0; max-width: 480px; margin: 0 auto; padding-bottom: 76px; }
 
     /* Header */
     .header { background: white; padding: 16px; border-bottom: 1px solid #e0e0e0; position: sticky; top: 0; z-index: 10; }
@@ -18,16 +18,24 @@
 
     /* Navigation bas */
     .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; border-top: 1px solid #e0e0e0; display: flex; z-index: 20; }
-    .nav-btn { flex: 1; padding: 12px 0; font-size: 12px; color: #888; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .nav-btn { flex: 1; padding: 10px 0; font-size: 11px; color: #888; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .nav-btn.active { color: #185FA5; font-weight: 500; }
-    .nav-icon { font-size: 20px; }
+    .nav-icon { font-size: 18px; }
 
     /* Vues */
     .vue { display: none; padding: 12px; }
     .vue.active { display: block; }
 
     /* Bouton connexion */
+    .connexion-zone { padding: 0 12px; }
     .btn-connexion { display: block; margin: 16px 0; padding: 12px; background: #185FA5; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; }
+
+    /* Menu du jour */
+    .menu-card { background: white; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+    .menu-titre { font-size: 12px; font-weight: 600; color: #185FA5; margin-bottom: 6px; }
+    .menu-ligne { display: flex; gap: 10px; font-size: 14px; color: #222; padding: 3px 0; }
+    .menu-moment { width: 44px; flex-shrink: 0; color: #888; font-size: 12px; padding-top: 2px; }
+    .menu-vide { color: #bbb; }
 
     /* Tâches */
     .tache { background: white; border-radius: 10px; margin-bottom: 8px; padding: 14px 12px; display: flex; align-items: center; gap: 12px; border: 1px solid #e8e8e8; }
@@ -35,11 +43,12 @@
     .check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ccc; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; cursor: pointer; }
     .check.done { background: #185FA5; border-color: #185FA5; }
     .check.done::after { content: '✓'; color: white; font-size: 14px; }
-    .tache-info { flex: 1; }
-    .tache-nom { font-size: 15px; color: #222; }
+    .tache-info { flex: 1; min-width: 0; }
+    .tache-nom { font-size: 15px; color: #222; word-wrap: break-word; }
     .tache-nom.done { text-decoration: line-through; color: #aaa; }
     .tache-note { font-size: 11px; color: #aaa; margin-top: 2px; font-style: italic; }
     .vide { text-align: center; color: #aaa; font-size: 14px; padding: 32px; }
+    .qte { color: #888; font-size: 13px; margin-left: 4px; }
 
     /* Sélecteur de jour */
     .jours { display: flex; overflow-x: auto; gap: 8px; padding: 4px 0 12px; scrollbar-width: none; }
@@ -51,12 +60,19 @@
 
     /* Tâche gestion */
     .tache-gestion { background: white; border-radius: 10px; margin-bottom: 8px; padding: 12px; border: 1px solid #e8e8e8; }
+    .tache-gestion.auto { background: #f6f9fd; }
     .tache-gestion-top { display: flex; align-items: center; justify-content: space-between; }
     .tache-gestion-nom { font-size: 15px; color: #222; flex: 1; }
     .tache-gestion-note { font-size: 11px; color: #aaa; margin-top: 2px; font-style: italic; }
     .tache-actions { display: flex; gap: 8px; margin-left: 8px; }
     .btn-edit { background: #e8f0fe; color: #185FA5; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
     .btn-del { background: #fce8e6; color: #c5221f; border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+    .auto-info { font-size: 11px; color: #185FA5; background: #e8f0fe; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+    .tag-auto { display: inline-block; font-size: 10px; color: #185FA5; background: #e8f0fe; border-radius: 10px; padding: 2px 8px; margin-left: 6px; }
+
+    /* Boutons icône */
+    .btn-ic { background: none; border: none; font-size: 15px; padding: 6px; cursor: pointer; color: #999; flex-shrink: 0; }
+    .btn-ic.del { color: #d99a97; }
 
     /* Formulaire ajout/modif */
     .formulaire { background: white; border-radius: 10px; padding: 16px; margin-bottom: 12px; border: 1px solid #e8e8e8; }
@@ -71,6 +87,7 @@
 
     /* Bouton ajouter */
     .btn-ajouter { width: 100%; padding: 12px; background: white; color: #185FA5; border: 2px dashed #185FA5; border-radius: 10px; font-size: 15px; cursor: pointer; margin-top: 4px; }
+    .btn-secondaire { width: 100%; padding: 10px; background: #f0f0f0; color: #555; border: none; border-radius: 10px; font-size: 13px; cursor: pointer; margin-top: 8px; }
 
     /* Badges catégorie */
     .badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 10px; color: white; margin-top: 3px; }
@@ -86,6 +103,27 @@
 
     /* Groupe catégorie */
     .groupe-titre { font-size: 12px; font-weight: 600; color: white; padding: 4px 10px; border-radius: 8px; margin: 12px 0 6px; display: inline-block; }
+
+    /* Courses */
+    .resume { font-size: 13px; color: #888; margin-bottom: 4px; }
+
+    /* Projets */
+    .seg { display: flex; background: #e2e2e2; border-radius: 10px; padding: 3px; margin-bottom: 12px; }
+    .seg button { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-size: 13px; color: #666; cursor: pointer; }
+    .seg button.active { background: white; color: #185FA5; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .projet-card { background: white; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+    .projet-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .projet-nom { font-size: 16px; font-weight: 600; color: #222; }
+    .progress { height: 8px; background: #e6edf7; border-radius: 6px; overflow: hidden; margin: 8px 0 4px; }
+    .progress > div { height: 100%; background: #185FA5; border-radius: 6px; transition: width 0.3s; }
+    .progress-txt { font-size: 11px; color: #888; margin-bottom: 4px; }
+    .sous-tache { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #f0f0f0; }
+    .chip { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: #eef3fb; color: #185FA5; display: inline-block; margin-top: 3px; margin-right: 4px; }
+    .chip.retard { background: #fce8e6; color: #c5221f; }
+    .chip.today { background: #185FA5; color: white; }
+    .jour-titre { font-size: 13px; font-weight: 600; color: #444; margin: 14px 0 6px; }
+    .jour-titre.retard { color: #c5221f; }
+    .btn-mini { background: #e8f0fe; color: #185FA5; border: none; border-radius: 6px; padding: 5px 9px; font-size: 12px; cursor: pointer; white-space: nowrap; }
 
     /* ── PLATEAU RÉTRO ── */
     .plateau-vue { padding: 12px; }
@@ -145,12 +183,40 @@
     <div class="pct" id="header-pct"></div>
   </div>
 
-  <!-- Vue Aujourd'hui -->
-  <div class="vue active" id="vue-aujourd-hui">
+  <div class="connexion-zone">
     <button class="btn-connexion" onclick="connexion()" id="btn-co" style="display:none">
       Se connecter avec Google
     </button>
+  </div>
+
+  <!-- Vue Aujourd'hui -->
+  <div class="vue active" id="vue-aujourd-hui">
+    <div class="menu-card" id="menu-card">
+      <div class="menu-titre">🍽 Menu du jour</div>
+      <div id="menu-contenu"><div class="menu-ligne menu-vide">Chargement...</div></div>
+    </div>
     <div id="liste-taches"><div class="vide">Chargement...</div></div>
+  </div>
+
+  <!-- Vue Courses -->
+  <div class="vue" id="vue-courses">
+    <div class="resume" id="courses-resume"></div>
+    <div id="formulaire-courses"></div>
+    <div id="liste-courses"><div class="vide">Chargement...</div></div>
+    <button class="btn-ajouter" onclick="ouvrirCourse(-1)">+ Ajouter un article</button>
+    <button class="btn-secondaire" id="btn-retirer-pris" style="display:none" onclick="retirerPris()"></button>
+  </div>
+
+  <!-- Vue Projets -->
+  <div class="vue" id="vue-projets">
+    <div class="seg">
+      <button id="seg-projet" class="active" onclick="setModeProjets('projet')">Par projet</button>
+      <button id="seg-jour" onclick="setModeProjets('jour')">Par jour</button>
+    </div>
+    <div id="formulaire-projets"></div>
+    <div id="liste-projets"><div class="vide">Chargement...</div></div>
+    <button class="btn-ajouter" onclick="ouvrirProjet(-1, '')">+ Ajouter une sous-tâche</button>
+    <datalist id="liste-noms-projets"></datalist>
   </div>
 
   <!-- Vue Gérer -->
@@ -186,6 +252,14 @@
       <span class="nav-icon">☑</span>
       Aujourd'hui
     </button>
+    <button class="nav-btn" onclick="allerVue('courses', this)">
+      <span class="nav-icon">🛒</span>
+      Courses
+    </button>
+    <button class="nav-btn" onclick="allerVue('projets', this)">
+      <span class="nav-icon">📋</span>
+      Projets
+    </button>
     <button class="nav-btn" onclick="allerVue('gerer', this)">
       <span class="nav-icon">✏</span>
       Gérer
@@ -199,12 +273,21 @@
   <script>
     const CLIENT_ID = '839214144593-sipnckscvoa5rcpeni5u9nlcakvv70i7.apps.googleusercontent.com';
     const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
-    const SHEET_ID = '1ddr_EGiigpdQlr7OIYgB15fHlLyGiZE3s4stRTfq7_0';
+    // Si tu as importé le nouveau classeur comme NOUVEAU fichier Google Sheets, remplace cet identifiant.
+    const SHEET_ID = '1F_7WzFvqzA_EO_FJ6orefaUd1_zeKkUIKMz4YpT4oJQ';
+    const API = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID;
 
     const PALIERS = { 30:[30,60,90,120,135,150], 31:[31,62,93,124,140,155] };
     const TOTAL_CASES = { 30:150, 31:155 };
-    const CELEBRATED_KEY = 'runblue_celebrated_paliers';
+    const CELEBRATED_KEY = 'runblue_celebrated_v2';
     const CONFETTI_COLORS = ['#7c3aed','#9f67fa','#4a9fd4','#c084fc','#60a5fa','#ffffff'];
+
+    const CATEGORIES = ['Me','House','Job','Study','Luna','Sport','Friends','Family','Administratif'];
+    const COULEURS = { Me:'#185FA5', Luna:'#E8760A', House:'#1A7F5A', Job:'#6B3FA0', Study:'#0891B2', Sport:'#059669', Friends:'#B5338A', Family:'#B45309', Administratif:'#555555', '':'#999999' };
+    const RAYONS = ['Fruits et légumes','Frais','Épicerie','Boucherie / Poisson','Boulangerie','Surgelés','Boissons','Maison / Hygiène','Luna','Autre'];
+
+    const N_AUTO = 10;   // lignes automatiques par jour dans Objectifs (les 5 suivantes sont manuelles)
+    const N_LIGNES = 15; // lignes de tâches par jour
 
     let jourSelectionne = new Date().getDate();
     let modeFormulaire = null;
@@ -215,17 +298,31 @@
     let confettiAnim = null;
     let confettiParticles = [];
 
+    let gestionData = [];
+    let coursesData = [];
+    let courseEdit = -1;
+    let projetsData = [];
+    let projetEdit = -1;
+    let modeProjets = 'projet';
+
     // ── Utilitaires ──────────────────────────────────────
 
     function getToken() { return localStorage.getItem('token'); }
     function ligneDepart(jour) { return 5 + (jour - 1) * 18; }
+    function esc(s) {
+      return String(s === undefined || s === null ? '' : s).replace(/[&<>"']/g, c => (
+        { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
+    function estVrai(v) { return v === true || v === 'TRUE' || v === 'VRAI'; }
+    function joursDansMois() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
 
     function getCelebrated() {
       try { return JSON.parse(localStorage.getItem(CELEBRATED_KEY) || '[]'); } catch(e) { return []; }
     }
-    function markCelebrated(p) {
+    function cleFete(p) { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + p; }
+    function markCelebrated(cle) {
       const l = getCelebrated();
-      if (!l.includes(p)) { l.push(p); localStorage.setItem(CELEBRATED_KEY, JSON.stringify(l)); }
+      if (!l.includes(cle)) { l.push(cle); localStorage.setItem(CELEBRATED_KEY, JSON.stringify(l)); }
     }
 
     function connexion() {
@@ -243,6 +340,51 @@
         new Date().toLocaleDateString('fr-FR', options);
     }
 
+    // ── Accès à Google Sheets ────────────────────────────
+
+    function sessionExpiree() {
+      localStorage.removeItem('token');
+      document.getElementById('btn-co').style.display = 'block';
+    }
+
+    async function sheetsFetch(chemin, options) {
+      const token = getToken();
+      if (!token) { sessionExpiree(); throw new Error('no-token'); }
+      const opts = options || {};
+      const res = await fetch(API + chemin, {
+        method: opts.method || 'GET',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: opts.body
+      });
+      if (res.status === 401) { sessionExpiree(); throw new Error('401'); }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }
+
+    async function lire(plage, extra) {
+      const d = await sheetsFetch('/values/' + encodeURIComponent(plage) + (extra ? '?' + extra : ''));
+      return d.values || [];
+    }
+
+    async function ecrire(plage, valeurs) {
+      return sheetsFetch('/values/' + encodeURIComponent(plage) + '?valueInputOption=RAW', {
+        method: 'PUT',
+        body: JSON.stringify({ range: plage, majorDimension: 'ROWS', values: valeurs })
+      });
+    }
+
+    async function ecrireLot(data) {
+      return sheetsFetch('/values:batchUpdate', {
+        method: 'POST',
+        body: JSON.stringify({ valueInputOption: 'RAW', data: data })
+      });
+    }
+
+    function erreurHtml(e) {
+      if (e && (e.message === '401' || e.message === 'no-token')) return '<div class="vide">Session expirée. Reconnectez-vous.</div>';
+      return '<div class="vide">Impossible de charger les données (' + esc(e && e.message) + '). Vérifie que l\'onglet existe dans le Sheet.</div>';
+    }
+
     // ── Navigation ───────────────────────────────────────
 
     function allerVue(nom, btn) {
@@ -250,47 +392,63 @@
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('vue-' + nom).classList.add('active');
       btn.classList.add('active');
+      if (nom === 'aujourd-hui') { chargerTaches(); chargerMenu(); }
+      if (nom === 'courses') chargerCourses();
+      if (nom === 'projets') chargerProjets();
       if (nom === 'gerer') chargerGestion(jourSelectionne);
       if (nom === 'plateau') chargerPlateau();
     }
 
-    // ── Vue Aujourd'hui ──────────────────────────────────
+    // ── Vue Aujourd'hui : menu du jour ───────────────────
+
+    async function chargerMenu() {
+      const zone = document.getElementById('menu-contenu');
+      if (!getToken()) { zone.innerHTML = '<div class="menu-ligne menu-vide">Connectez-vous pour voir le menu.</div>'; return; }
+      try {
+        const rows = await lire('Menus!A2:C8');
+        const idx = (new Date().getDay() + 6) % 7; // lundi = 0
+        const r = rows[idx] || [];
+        const midi = (r[1] || '').toString().trim();
+        const soir = (r[2] || '').toString().trim();
+        const ligne = (label, val) =>
+          `<div class="menu-ligne"><div class="menu-moment">${label}</div><div class="${val ? '' : 'menu-vide'}">${val ? esc(val) : 'Non renseigné'}</div></div>`;
+        zone.innerHTML = ligne('Midi', midi) + ligne('Soir', soir);
+      } catch (e) {
+        zone.innerHTML = '<div class="menu-ligne menu-vide">Menu indisponible.</div>';
+      }
+    }
+
+    // ── Vue Aujourd'hui : tâches ─────────────────────────
 
     async function chargerTaches() {
-      const token = getToken();
-      if (!token) {
+      const liste = document.getElementById('liste-taches');
+      if (!getToken()) {
         document.getElementById('btn-co').style.display = 'block';
-        document.getElementById('liste-taches').innerHTML = '<div class="vide">Connectez-vous pour voir vos tâches.</div>';
+        liste.innerHTML = '<div class="vide">Connectez-vous pour voir vos tâches.</div>';
         return;
       }
       const jour = new Date().getDate();
       const debut = ligneDepart(jour) + 1;
-      const fin = debut + 14;
-      const plage = `Objectifs!A${debut}:D${fin}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
-      const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        document.getElementById('btn-co').style.display = 'block';
-        document.getElementById('liste-taches').innerHTML = '<div class="vide">Session expirée. Reconnectez-vous.</div>';
-        return;
+      try {
+        const rows = await lire(`Objectifs!A${debut}:D${debut + N_LIGNES - 1}`);
+        afficherTaches(rows, debut);
+      } catch (e) {
+        liste.innerHTML = erreurHtml(e);
       }
-      const data = await response.json();
-      const rows = data.values || [];
-      afficherTaches(rows, debut);
     }
 
     function afficherTaches(rows, ligneDebut) {
       const liste = document.getElementById('liste-taches');
       const taches = rows
         .map((r, i) => ({
-          coche: r[0] === 'TRUE' || r[0] === 'VRAI' || r[0] === true,
+          coche: estVrai(r[0]),
           cat: r[1] || '', nom: r[2] || '', note: r[3] || '',
           ligneSheet: ligneDebut + i
         }))
         .filter(t => t.nom.trim() !== '');
 
       if (taches.length === 0) {
+        document.getElementById('header-pct').textContent = '';
         liste.innerHTML = '<div class="vide">Aucune tâche pour aujourd\'hui.</div>';
         return;
       }
@@ -301,7 +459,6 @@
       document.getElementById('header-pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
 
       const ordre = ['Me','Luna','House','Job','Study','Sport','Friends','Family','Administratif',''];
-      const couleurs = { Me:'#185FA5', Luna:'#E8760A', House:'#1A7F5A', Job:'#6B3FA0', Study:'#0891B2', Sport:'#059669', Friends:'#B5338A', Family:'#B45309', Administratif:'#555555', '':'#999' };
 
       const groupes = {};
       for (const cat of ordre) groupes[cat] = [];
@@ -313,14 +470,14 @@
       let html = '';
       for (const cat of ordre) {
         if (groupes[cat].length === 0) continue;
-        const couleur = couleurs[cat] || '#999';
+        const couleur = COULEURS[cat] || '#999';
         html += `<div class="groupe-titre" style="background:${couleur}">${cat || 'Autre'}</div>`;
         html += groupes[cat].map(t => `
           <div class="tache" onclick="basculer(${t.ligneSheet}, this)">
             <div class="check ${t.coche ? 'done' : ''}"></div>
             <div class="tache-info">
-              <div class="tache-nom ${t.coche ? 'done' : ''}">${t.nom}</div>
-              ${t.note ? `<div class="tache-note">${t.note}</div>` : ''}
+              <div class="tache-nom ${t.coche ? 'done' : ''}">${esc(t.nom)}</div>
+              ${t.note ? `<div class="tache-note">${esc(t.note)}</div>` : ''}
             </div>
           </div>`).join('');
       }
@@ -328,32 +485,434 @@
     }
 
     async function basculer(ligneSheet, el) {
-      const token = getToken();
       const check = el.querySelector('.check');
       const nom = el.querySelector('.tache-nom');
       const estCoche = check.classList.contains('done');
       const nouvelleValeur = !estCoche;
       check.classList.toggle('done', nouvelleValeur);
       nom.classList.toggle('done', nouvelleValeur);
-      const plage = `Objectifs!A${ligneSheet}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`;
-      await fetch(url, {
-        method: 'PUT',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ range: plage, majorDimension: 'ROWS', values: [[nouvelleValeur]] })
-      });
-      const taches = document.querySelectorAll('.tache');
+      const taches = document.querySelectorAll('#liste-taches .tache');
       const total = taches.length;
-      const cochees = document.querySelectorAll('.check.done').length;
+      const cochees = document.querySelectorAll('#liste-taches .check.done').length;
       const pct = Math.round((cochees / total) * 100);
       document.getElementById('header-pct').textContent = `${cochees}/${total} tâches — ${pct}%`;
+      try {
+        await ecrire(`Objectifs!A${ligneSheet}`, [[nouvelleValeur]]);
+      } catch (e) {
+        check.classList.toggle('done', estCoche);
+        nom.classList.toggle('done', estCoche);
+        alert('La modification n\'a pas pu être enregistrée. Vérifie ta connexion.');
+        chargerTaches();
+      }
+    }
+
+    // ── Vue Courses ──────────────────────────────────────
+
+    async function chargerCourses() {
+      const liste = document.getElementById('liste-courses');
+      if (!getToken()) {
+        document.getElementById('btn-co').style.display = 'block';
+        liste.innerHTML = '<div class="vide">Connectez-vous pour voir la liste.</div>';
+        return;
+      }
+      try {
+        const rows = await lire('Courses!A2:E101');
+        coursesData = [];
+        for (let i = 0; i < 100; i++) {
+          const r = rows[i] || [];
+          const article = (r[1] === undefined || r[1] === null) ? '' : String(r[1]).trim();
+          if (!article) continue;
+          coursesData.push({ ligne: 2 + i, pris: estVrai(r[0]), article: article, qte: r[2] || '', rayon: r[3] || '', note: r[4] || '' });
+        }
+        afficherCourses();
+      } catch (e) {
+        liste.innerHTML = erreurHtml(e);
+      }
+    }
+
+    function afficherCourses() {
+      const liste = document.getElementById('liste-courses');
+      const nbPris = coursesData.filter(c => c.pris).length;
+      const nbReste = coursesData.length - nbPris;
+      document.getElementById('courses-resume').textContent =
+        coursesData.length ? `${nbReste} à acheter · ${nbPris} pris` : '';
+      const btn = document.getElementById('btn-retirer-pris');
+      btn.style.display = nbPris > 0 ? 'block' : 'none';
+      btn.textContent = `Retirer ${nbPris > 1 ? 'les ' + nbPris + ' articles pris' : 'l\'article pris'}`;
+
+      if (coursesData.length === 0) {
+        liste.innerHTML = '<div class="vide">La liste est vide.</div>';
+        return;
+      }
+      const groupes = {};
+      coursesData.forEach((c, i) => {
+        const k = RAYONS.includes(c.rayon) ? c.rayon : '';
+        (groupes[k] = groupes[k] || []).push(i);
+      });
+      let html = '';
+      for (const k of RAYONS.concat([''])) {
+        if (!groupes[k]) continue;
+        const idxs = groupes[k].slice().sort((a, b) => Number(coursesData[a].pris) - Number(coursesData[b].pris));
+        html += `<div class="groupe-titre" style="background:#555">${esc(k || 'Sans rayon')}</div>`;
+        html += idxs.map(i => {
+          const c = coursesData[i];
+          return `
+          <div class="tache">
+            <div class="check ${c.pris ? 'done' : ''}" onclick="basculerCourse(${i})"></div>
+            <div class="tache-info" onclick="basculerCourse(${i})">
+              <div class="tache-nom ${c.pris ? 'done' : ''}">${esc(c.article)}${c.qte ? `<span class="qte">${esc(c.qte)}</span>` : ''}</div>
+              ${c.note ? `<div class="tache-note">${esc(c.note)}</div>` : ''}
+            </div>
+            <button class="btn-ic" onclick="ouvrirCourse(${i})" aria-label="Modifier">✎</button>
+            <button class="btn-ic del" onclick="supprimerCourse(${i})" aria-label="Supprimer">✕</button>
+          </div>`;
+        }).join('');
+      }
+      liste.innerHTML = html;
+    }
+
+    async function basculerCourse(i) {
+      const c = coursesData[i];
+      c.pris = !c.pris;
+      afficherCourses();
+      try {
+        await ecrire(`Courses!A${c.ligne}`, [[c.pris]]);
+      } catch (e) {
+        c.pris = !c.pris;
+        afficherCourses();
+        alert('La modification n\'a pas pu être enregistrée.');
+      }
+    }
+
+    function ouvrirCourse(i) {
+      courseEdit = i;
+      const c = i >= 0 ? coursesData[i] : { article: '', qte: '', rayon: '', note: '' };
+      document.getElementById('formulaire-courses').innerHTML = `
+        <div class="formulaire">
+          <h3>${i >= 0 ? 'Modifier l\'article' : 'Ajouter un article'}</h3>
+          <div class="champ"><label>Article</label>
+            <input type="text" id="c-article" value="${esc(c.article)}" placeholder="Ex: Tomates" /></div>
+          <div class="champ"><label>Quantité (optionnel)</label>
+            <input type="text" id="c-qte" value="${esc(c.qte)}" placeholder="Ex: 1 kg" /></div>
+          <div class="champ"><label>Rayon</label>
+            <select id="c-rayon"><option value="">— Aucun —</option>
+              ${RAYONS.map(r => `<option value="${esc(r)}" ${c.rayon === r ? 'selected' : ''}>${esc(r)}</option>`).join('')}
+            </select></div>
+          <div class="champ"><label>Note (optionnel)</label>
+            <input type="text" id="c-note" value="${esc(c.note)}" placeholder="Ex: marque préférée" /></div>
+          <div class="form-actions">
+            <button class="btn-cancel" onclick="fermerCourse()">Annuler</button>
+            <button class="btn-save" onclick="sauvegarderCourse()">Enregistrer</button>
+          </div>
+        </div>`;
+      document.getElementById('c-article').focus();
+    }
+
+    function fermerCourse() {
+      document.getElementById('formulaire-courses').innerHTML = '';
+      courseEdit = -1;
+    }
+
+    async function sauvegarderCourse() {
+      const article = document.getElementById('c-article').value.trim();
+      const qte = document.getElementById('c-qte').value.trim();
+      const rayon = document.getElementById('c-rayon').value;
+      const note = document.getElementById('c-note').value.trim();
+      if (!article) { alert('Le nom de l\'article est obligatoire.'); return; }
+      let ligne, pris = false;
+      if (courseEdit >= 0) {
+        ligne = coursesData[courseEdit].ligne;
+        pris = coursesData[courseEdit].pris;
+      } else {
+        const occupees = new Set(coursesData.map(c => c.ligne));
+        for (let l = 2; l <= 101; l++) if (!occupees.has(l)) { ligne = l; break; }
+        if (!ligne) { alert('La liste est pleine (100 articles max). Retire les articles pris.'); return; }
+      }
+      try {
+        await ecrire(`Courses!A${ligne}:E${ligne}`, [[pris, article, qte, rayon, note]]);
+      } catch (e) { alert('L\'article n\'a pas pu être enregistré.'); return; }
+      fermerCourse();
+      chargerCourses();
+    }
+
+    async function supprimerCourse(i) {
+      const c = coursesData[i];
+      if (!confirm('Supprimer « ' + c.article + ' » ?')) return;
+      try {
+        await ecrire(`Courses!A${c.ligne}:E${c.ligne}`, [[false, '', '', '', '']]);
+      } catch (e) { alert('La suppression a échoué.'); return; }
+      chargerCourses();
+    }
+
+    async function retirerPris() {
+      const pris = coursesData.filter(c => c.pris);
+      if (pris.length === 0) return;
+      if (!confirm('Retirer ' + pris.length + ' article(s) pris de la liste ?')) return;
+      try {
+        await ecrireLot(pris.map(c => ({ range: `Courses!A${c.ligne}:E${c.ligne}`, values: [[false, '', '', '', '']] })));
+      } catch (e) { alert('Le nettoyage a échoué.'); return; }
+      chargerCourses();
+    }
+
+    // ── Vue Projets ──────────────────────────────────────
+
+    function serialVersIso(n) {
+      const d = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000);
+      return d.toISOString().slice(0, 10);
+    }
+    function isoVersSerial(iso) {
+      const p = iso.split('-').map(Number);
+      return Math.round((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(1899, 11, 30)) / 86400000);
+    }
+    function isoAujourdhui(decalage) {
+      const d = new Date();
+      d.setDate(d.getDate() + (decalage || 0));
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function libelleDate(iso) {
+      return new Date(iso + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+    function lireDate(v) {
+      if (typeof v === 'number') return serialVersIso(v);
+      if (typeof v === 'string') {
+        const s = v.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+      }
+      return '';
+    }
+
+    function setModeProjets(m) {
+      modeProjets = m;
+      document.getElementById('seg-projet').classList.toggle('active', m === 'projet');
+      document.getElementById('seg-jour').classList.toggle('active', m === 'jour');
+      afficherProjets();
+    }
+
+    async function chargerProjets() {
+      const liste = document.getElementById('liste-projets');
+      if (!getToken()) {
+        document.getElementById('btn-co').style.display = 'block';
+        liste.innerHTML = '<div class="vide">Connectez-vous pour voir vos projets.</div>';
+        return;
+      }
+      try {
+        const rows = await lire('Projets!A2:E101', 'valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER');
+        projetsData = [];
+        for (let i = 0; i < 100; i++) {
+          const r = rows[i] || [];
+          const nom = (r[2] === undefined || r[2] === null) ? '' : String(r[2]).trim();
+          if (!nom) continue;
+          projetsData.push({
+            ligne: 2 + i,
+            projet: (r[0] === undefined || r[0] === null || String(r[0]).trim() === '') ? 'Sans projet' : String(r[0]).trim(),
+            cat: r[1] || '',
+            nom: nom,
+            date: lireDate(r[3]),
+            fait: estVrai(r[4])
+          });
+        }
+        afficherProjets();
+      } catch (e) {
+        liste.innerHTML = erreurHtml(e);
+      }
+    }
+
+    function ligneSousTache(i, mode) {
+      const p = projetsData[i];
+      const aujourdhui = isoAujourdhui(0);
+      let meta = '';
+      if (mode === 'projet') {
+        if (p.date) {
+          const cls = (!p.fait && p.date < aujourdhui) ? 'retard' : (p.date === aujourdhui ? 'today' : '');
+          meta = `<span class="chip ${cls}">${esc(libelleDate(p.date))}</span>`;
+        } else {
+          meta = '<span class="chip">À planifier</span>';
+        }
+      } else {
+        meta = `<span class="chip" style="background:${COULEURS[p.cat] || COULEURS['']};color:white">${esc(p.projet)}</span>`;
+      }
+      return `
+        <div class="sous-tache">
+          <div class="check ${p.fait ? 'done' : ''}" onclick="basculerProjet(${i})"></div>
+          <div class="tache-info" onclick="basculerProjet(${i})">
+            <div class="tache-nom ${p.fait ? 'done' : ''}">${esc(p.nom)}</div>
+            <div>${meta}</div>
+          </div>
+          <button class="btn-ic" onclick="ouvrirProjet(${i}, '')" aria-label="Modifier">✎</button>
+          <button class="btn-ic del" onclick="supprimerProjet(${i})" aria-label="Supprimer">✕</button>
+        </div>`;
+    }
+
+    function afficherProjets() {
+      const liste = document.getElementById('liste-projets');
+      document.getElementById('liste-noms-projets').innerHTML =
+        [...new Set(projetsData.map(p => p.projet).filter(n => n !== 'Sans projet'))].map(n => `<option value="${esc(n)}">`).join('');
+
+      if (projetsData.length === 0) {
+        liste.innerHTML = '<div class="vide">Aucune sous-tâche pour le moment.</div>';
+        return;
+      }
+      const aujourdhui = isoAujourdhui(0);
+
+      if (modeProjets === 'projet') {
+        const ordre = [];
+        const parProjet = {};
+        projetsData.forEach((p, i) => {
+          if (!parProjet[p.projet]) { parProjet[p.projet] = []; ordre.push(p.projet); }
+          parProjet[p.projet].push(i);
+        });
+        liste.innerHTML = ordre.map(nom => {
+          const idxs = parProjet[nom].slice().sort((a, b) => {
+            const pa = projetsData[a], pb = projetsData[b];
+            if (pa.fait !== pb.fait) return pa.fait ? 1 : -1;
+            if (pa.date && pb.date) return pa.date < pb.date ? -1 : (pa.date > pb.date ? 1 : 0);
+            if (pa.date) return -1;
+            if (pb.date) return 1;
+            return 0;
+          });
+          const total = idxs.length;
+          const faits = idxs.filter(i => projetsData[i].fait).length;
+          const pct = Math.round(faits / total * 100);
+          const cat = projetsData[idxs[0]].cat;
+          return `
+          <div class="projet-card">
+            <div class="projet-top">
+              <div>
+                <div class="projet-nom">${esc(nom)}</div>
+                ${cat ? `<span class="badge" style="background:${COULEURS[cat] || COULEURS['']}">${esc(cat)}</span>` : ''}
+              </div>
+              <button class="btn-mini" onclick="ouvrirProjet(-1, ${idxs[0]})">+ Sous-tâche</button>
+            </div>
+            <div class="progress"><div style="width:${pct}%"></div></div>
+            <div class="progress-txt">${faits}/${total} terminées · ${pct}%</div>
+            ${idxs.map(i => ligneSousTache(i, 'projet')).join('')}
+          </div>`;
+        }).join('');
+        return;
+      }
+
+      // Mode "Par jour"
+      const groupes = { retard: [], sans: [] };
+      const dates = {};
+      projetsData.forEach((p, i) => {
+        if (!p.date) { if (!p.fait) groupes.sans.push(i); return; }
+        if (p.date < aujourdhui) {
+          if (!p.fait) groupes.retard.push(i);   // les sous-tâches passées et terminées ne sont pas listées ici
+          return;
+        }
+        (dates[p.date] = dates[p.date] || []).push(i);
+      });
+      let html = '';
+      const bloc = (titre, idxs, cls) => {
+        if (!idxs.length) return '';
+        return `<div class="jour-titre ${cls || ''}">${esc(titre)}</div>` + idxs.map(i => ligneSousTache(i, 'jour')).join('');
+      };
+      html += bloc('En retard', groupes.retard, 'retard');
+      Object.keys(dates).sort().forEach(d => {
+        let titre = libelleDate(d);
+        if (d === aujourdhui) titre = 'Aujourd\'hui · ' + titre;
+        else if (d === isoAujourdhui(1)) titre = 'Demain · ' + titre;
+        html += bloc(titre, dates[d]);
+      });
+      html += bloc('À planifier', groupes.sans);
+      liste.innerHTML = html || '<div class="vide">Rien de prévu. Toutes les sous-tâches planifiées sont terminées.</div>';
+    }
+
+    async function basculerProjet(i) {
+      const p = projetsData[i];
+      p.fait = !p.fait;
+      afficherProjets();
+      try {
+        await ecrire(`Projets!E${p.ligne}`, [[p.fait]]);
+      } catch (e) {
+        p.fait = !p.fait;
+        afficherProjets();
+        alert('La modification n\'a pas pu être enregistrée.');
+      }
+    }
+
+    // i >= 0 : modifier la sous-tâche i. i = -1 : ajouter, avec modele = index d'une sous-tâche du même projet (ou '')
+    function ouvrirProjet(i, modele) {
+      projetEdit = i;
+      let p = { projet: '', cat: '', nom: '', date: '' };
+      if (i >= 0) p = projetsData[i];
+      else if (modele !== '' && projetsData[modele]) p = { projet: projetsData[modele].projet, cat: projetsData[modele].cat, nom: '', date: '' };
+      if (p.projet === 'Sans projet') p.projet = '';
+      document.getElementById('formulaire-projets').innerHTML = `
+        <div class="formulaire">
+          <h3>${i >= 0 ? 'Modifier la sous-tâche' : 'Ajouter une sous-tâche'}</h3>
+          <div class="champ"><label>Projet</label>
+            <input type="text" id="p-projet" list="liste-noms-projets" value="${esc(p.projet)}" placeholder="Ex: EllaDesCartes" onchange="majCatProjet()" /></div>
+          <div class="champ"><label>Catégorie</label>
+            <select id="p-cat"><option value="">— Aucune —</option>
+              ${CATEGORIES.map(c => `<option value="${c}" ${p.cat === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select></div>
+          <div class="champ"><label>Sous-tâche</label>
+            <input type="text" id="p-nom" value="${esc(p.nom)}" placeholder="Ex: Préparer la maquette" /></div>
+          <div class="champ"><label>Date prévue (optionnel)</label>
+            <input type="date" id="p-date" value="${esc(p.date)}" /></div>
+          <div class="form-actions">
+            <button class="btn-cancel" onclick="fermerProjet()">Annuler</button>
+            <button class="btn-save" onclick="sauvegarderProjet()">Enregistrer</button>
+          </div>
+        </div>`;
+      document.getElementById('p-nom').focus();
+    }
+
+    function majCatProjet() {
+      const nom = document.getElementById('p-projet').value.trim();
+      const sel = document.getElementById('p-cat');
+      if (sel.value) return;
+      const ex = projetsData.find(p => p.projet === nom && p.cat);
+      if (ex) sel.value = ex.cat;
+    }
+
+    function fermerProjet() {
+      document.getElementById('formulaire-projets').innerHTML = '';
+      projetEdit = -1;
+    }
+
+    async function sauvegarderProjet() {
+      const projet = document.getElementById('p-projet').value.trim();
+      const cat = document.getElementById('p-cat').value;
+      const nom = document.getElementById('p-nom').value.trim();
+      const date = document.getElementById('p-date').value;
+      if (!projet) { alert('Le nom du projet est obligatoire.'); return; }
+      if (!nom) { alert('Le nom de la sous-tâche est obligatoire.'); return; }
+      let ligne, fait = false;
+      if (projetEdit >= 0) {
+        ligne = projetsData[projetEdit].ligne;
+        fait = projetsData[projetEdit].fait;
+      } else {
+        const occupees = new Set(projetsData.map(p => p.ligne));
+        for (let l = 2; l <= 101; l++) if (!occupees.has(l)) { ligne = l; break; }
+        if (!ligne) { alert('Plus de place (100 sous-tâches max).'); return; }
+      }
+      try {
+        await ecrire(`Projets!A${ligne}:E${ligne}`, [[projet, cat, nom, date ? isoVersSerial(date) : '', fait]]);
+      } catch (e) { alert('La sous-tâche n\'a pas pu être enregistrée.'); return; }
+      fermerProjet();
+      chargerProjets();
+    }
+
+    async function supprimerProjet(i) {
+      const p = projetsData[i];
+      if (!confirm('Supprimer « ' + p.nom + ' » ?')) return;
+      try {
+        await ecrire(`Projets!A${p.ligne}:E${p.ligne}`, [['', '', '', '', false]]);
+      } catch (e) { alert('La suppression a échoué.'); return; }
+      chargerProjets();
     }
 
     // ── Vue Gérer ────────────────────────────────────────
+    // Les 10 premières lignes de chaque jour sont automatiques (onglet Tâches du Sheet).
+    // Seules les 5 dernières sont modifiables ici.
 
     function construireSeleteurJours() {
       const aujourd = new Date().getDate();
-      const dernierJour = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+      const dernierJour = joursDansMois();
       const container = document.getElementById('selecteur-jours');
       container.innerHTML = '';
       for (let j = 1; j <= dernierJour; j++) {
@@ -371,55 +930,66 @@
       }
       setTimeout(() => {
         const actif = container.querySelector('.active');
-        if (actif) actif.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+        if (actif && actif.scrollIntoView) actif.scrollIntoView({ inline: 'center', behavior: 'smooth' });
       }, 100);
     }
 
     async function chargerGestion(jour) {
-      const token = getToken();
-      if (!token) return;
+      const liste = document.getElementById('liste-gestion');
+      if (!getToken()) {
+        liste.innerHTML = '<div class="vide">Connectez-vous pour gérer vos tâches.</div>';
+        return;
+      }
       const debut = ligneDepart(jour) + 1;
-      const fin = debut + 14;
-      const plage = `Objectifs!A${debut}:D${fin}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
-      const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-      const data = await response.json();
-      const rows = data.values || [];
-      afficherGestion(rows, debut);
+      try {
+        const rows = await lire(`Objectifs!A${debut}:D${debut + N_LIGNES - 1}`);
+        afficherGestion(rows, debut);
+      } catch (e) {
+        liste.innerHTML = erreurHtml(e);
+      }
     }
 
     function afficherGestion(rows, ligneDebut) {
       const liste = document.getElementById('liste-gestion');
-      const taches = rows
-        .map((r, i) => ({ ...r, ligneSheet: ligneDebut + i }))
-        .filter(r => r[2] && r[2].trim() !== '');
-      if (taches.length === 0) {
-        liste.innerHTML = '<div class="vide">Aucune tâche ce jour.</div>';
+      gestionData = [];
+      for (let i = 0; i < N_LIGNES; i++) {
+        const r = rows[i] || [];
+        gestionData.push({
+          ligne: ligneDebut + i, auto: i < N_AUTO, coche: estVrai(r[0]),
+          cat: r[1] || '', nom: (r[2] || '').toString().trim(), note: r[3] || ''
+        });
+      }
+      const affichees = gestionData.map((t, i) => ({ t, i })).filter(x => x.t.nom !== '');
+      const info = '<div class="auto-info">Les tâches marquées « auto » viennent de l\'onglet Tâches du Sheet (quotidiennes, hebdo, mensuelles, annuelles). Ici, tu modifies les tâches propres à ce jour.</div>';
+      if (affichees.length === 0) {
+        liste.innerHTML = info + '<div class="vide">Aucune tâche ce jour.</div>';
         return;
       }
-      liste.innerHTML = taches.map(t => `
-        <div class="tache-gestion">
+      liste.innerHTML = info + affichees.map(({ t, i }) => `
+        <div class="tache-gestion ${t.auto ? 'auto' : ''}">
           <div class="tache-gestion-top">
             <div class="tache-info">
-              <div class="tache-gestion-nom">${t[2] || ''}</div>
-              ${t[1] ? `<span class="badge badge-${t[1]}">${t[1]}</span>` : ''}
-              ${t[3] ? `<div class="tache-gestion-note">${t[3]}</div>` : ''}
+              <div class="tache-gestion-nom">${esc(t.nom)}${t.auto ? '<span class="tag-auto">auto</span>' : ''}</div>
+              ${t.cat ? `<span class="badge" style="background:${COULEURS[t.cat] || COULEURS['']}">${esc(t.cat)}</span>` : ''}
+              ${t.note ? `<div class="tache-gestion-note">${esc(t.note)}</div>` : ''}
             </div>
+            ${t.auto ? '' : `
             <div class="tache-actions">
-              <button class="btn-edit" onclick="ouvrirModif(${t.ligneSheet}, '${(t[2]||'').replace(/'/g,"\\'")}', '${(t[1]||'').replace(/'/g,"\\'")}', '${(t[3]||'').replace(/'/g,"\\'")}')">Modifier</button>
-              <button class="btn-del" onclick="supprimerTache(${t.ligneSheet})">Supprimer</button>
-            </div>
+              <button class="btn-edit" onclick="ouvrirModif(${i})">Modifier</button>
+              <button class="btn-del" onclick="supprimerTache(${i})">Supprimer</button>
+            </div>`}
           </div>
         </div>`).join('');
     }
 
-    function ouvrirFormulaire(nom='', cat='', note='') {
+    function ouvrirFormulaire(nom, cat, note) {
       modeFormulaire = 'ajout'; ligneModif = null;
-      afficherFormulaire('Ajouter une tâche', nom, cat, note);
+      afficherFormulaire('Ajouter une tâche', nom || '', cat || '', note || '');
     }
-    function ouvrirModif(ligne, nom, cat, note) {
-      modeFormulaire = 'modif'; ligneModif = ligne;
-      afficherFormulaire('Modifier la tâche', nom, cat, note);
+    function ouvrirModif(i) {
+      const t = gestionData[i];
+      modeFormulaire = 'modif'; ligneModif = i;
+      afficherFormulaire('Modifier la tâche', t.nom, t.cat, t.note);
     }
     function afficherFormulaire(titre, nom, cat, note) {
       document.getElementById('formulaire-container').innerHTML = `
@@ -427,20 +997,18 @@
           <h3>${titre}</h3>
           <div class="champ">
             <label>Tâche</label>
-            <input type="text" id="f-nom" value="${nom}" placeholder="Ex: Laver le chien" />
+            <input type="text" id="f-nom" value="${esc(nom)}" placeholder="Ex: Laver le chien" />
           </div>
           <div class="champ">
             <label>Catégorie</label>
             <select id="f-cat">
               <option value="">— Aucune —</option>
-              ${['Me','House','Job','Study','Luna','Sport','Friends','Family','Administratif'].map(c =>
-                `<option value="${c}" ${cat===c?'selected':''}>${c}</option>`
-              ).join('')}
+              ${CATEGORIES.map(c => `<option value="${c}" ${cat === c ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </div>
           <div class="champ">
             <label>Note (optionnel)</label>
-            <input type="text" id="f-note" value="${note}" placeholder="Ex: Avec le shampooing spécial" />
+            <input type="text" id="f-note" value="${esc(note)}" placeholder="Ex: Avec le shampooing spécial" />
           </div>
           <div class="form-actions">
             <button class="btn-cancel" onclick="fermerFormulaire()">Annuler</button>
@@ -454,54 +1022,52 @@
     }
 
     async function sauvegarderTache() {
-      const token = getToken();
       const nom = document.getElementById('f-nom').value.trim();
       const cat = document.getElementById('f-cat').value;
       const note = document.getElementById('f-note').value.trim();
       if (!nom) { alert('Le nom de la tâche est obligatoire.'); return; }
-      let ligne = ligneModif;
-      if (modeFormulaire === 'ajout') {
-        const debut = ligneDepart(jourSelectionne) + 1;
-        const fin = debut + 14;
-        const plage = `Objectifs!A${debut}:D${fin}`;
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}`;
-        const response = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
-        const data = await response.json();
-        const rows = data.values || [];
-        let indexVide = rows.findIndex(r => !r[2] || r[2].trim() === '');
-        if (indexVide === -1) { alert('Plus de place pour ce jour (15 tâches max).'); return; }
-        ligne = debut + indexVide;
-      }
-      const plage = `Objectifs!A${ligne}:D${ligne}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`;
-      await fetch(url, {
-        method: 'PUT',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ range: plage, majorDimension: 'ROWS', values: [[false, cat, nom, note]] })
-      });
+      let ligne, coche = false;
+      try {
+        if (modeFormulaire === 'ajout') {
+          const debut = ligneDepart(jourSelectionne) + 1;
+          const rows = await lire(`Objectifs!A${debut}:D${debut + N_LIGNES - 1}`);
+          let indexVide = -1;
+          for (let i = N_AUTO; i < N_LIGNES; i++) {
+            const r = rows[i] || [];
+            if (!r[2] || String(r[2]).trim() === '') { indexVide = i; break; }
+          }
+          if (indexVide === -1) { alert('Plus de place pour ce jour (' + (N_LIGNES - N_AUTO) + ' tâches propres au jour max).'); return; }
+          ligne = debut + indexVide;
+        } else {
+          ligne = gestionData[ligneModif].ligne;
+          coche = gestionData[ligneModif].coche;
+        }
+        await ecrire(`Objectifs!A${ligne}:D${ligne}`, [[coche, cat, nom, note]]);
+      } catch (e) { alert('La tâche n\'a pas pu être enregistrée.'); return; }
       fermerFormulaire();
       chargerGestion(jourSelectionne);
     }
 
-    async function supprimerTache(ligneSheet) {
+    async function supprimerTache(i) {
       if (!confirm('Supprimer cette tâche ?')) return;
-      const token = getToken();
-      const plage = `Objectifs!A${ligneSheet}:D${ligneSheet}`;
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`;
-      await fetch(url, {
-        method: 'PUT',
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ range: plage, majorDimension: 'ROWS', values: [[false, '', '', '']] })
-      });
+      const t = gestionData[i];
+      try {
+        await ecrire(`Objectifs!A${t.ligne}:D${t.ligne}`, [[false, '', '', '']]);
+      } catch (e) { alert('La suppression a échoué.'); return; }
       chargerGestion(jourSelectionne);
     }
 
     // ── Vue Plateau ──────────────────────────────────────
+    // Le pion ne dépend que des tâches du quotidien (onglet Objectifs, via Recap). Les projets n'y comptent pas.
+
+    function majBoutonsMois() {
+      document.getElementById('btn30').classList.toggle('active', monthMode === 30);
+      document.getElementById('btn31').classList.toggle('active', monthMode === 31);
+    }
 
     function setMonth(m) {
       monthMode = m;
-      document.getElementById('btn30').classList.toggle('active', m === 30);
-      document.getElementById('btn31').classList.toggle('active', m === 31);
+      majBoutonsMois();
       renderPlateau();
     }
 
@@ -573,8 +1139,8 @@
       renderPalierCards(paliers, score);
 
       const celebrated = getCelebrated();
-      if (paliers.includes(score) && !celebrated.includes(score)) {
-        markCelebrated(score);
+      if (paliers.includes(score) && !celebrated.includes(cleFete(score))) {
+        markCelebrated(cleFete(score));
         launchConfetti();
         setTimeout(() => showPopup(score), 300);
       }
@@ -594,8 +1160,8 @@
             <div class="palier-card-title">${unlocked ? '>> DEBLOQUE' : '>> verrouille'}</div>
           </div>
           ${unlocked ? `
-            <div class="palier-reward">${reward || '<span style="color:#7a8aaa">aucune récompense saisie</span>'}</div>
-            <input class="reward-input" id="r-${p}" placeholder="Saisir ta récompense..." value="${reward}" />
+            <div class="palier-reward">${reward ? esc(reward) : '<span style="color:#7a8aaa">aucune récompense saisie</span>'}</div>
+            <input class="reward-input" id="r-${p}" placeholder="Saisir ta récompense..." value="${esc(reward)}" />
             <button class="btn-save-reward" onclick="saveReward(${p})">Enregistrer</button>
             <div class="save-ok" id="ok-${p}">Sauvegarde OK !</div>
           ` : `<div style="font-size:7px;color:#7a8aaa;margin-top:4px;font-family:'Press Start 2P',monospace;">Atteins la case ${p} pour débloquer.</div>`}
@@ -609,6 +1175,7 @@
       const wrap = document.getElementById('retro-wrap');
       canvas.width = wrap.offsetWidth; canvas.height = wrap.offsetHeight;
       const ctx = canvas.getContext('2d');
+      if (!ctx) return;
       confettiParticles = [];
       for (let i = 0; i < 80; i++) {
         confettiParticles.push({
@@ -647,7 +1214,7 @@
         <div class="popup-box">
           <div class="popup-fighting">Borahae !</div>
           <div class="popup-palier">> PALIER ${palier} ATTEINT</div>
-          <div class="popup-reward">${reward ? reward : 'Saisis ta récompense ci-dessous !'}</div>
+          <div class="popup-reward">${reward ? esc(reward) : 'Saisis ta récompense ci-dessous !'}</div>
           <button class="popup-close" onclick="this.closest('.popup-overlay').remove()">CONTINUER</button>
         </div>
       `;
@@ -655,19 +1222,13 @@
     }
 
     async function saveReward(palier) {
-      const token = getToken();
       const val = document.getElementById('r-' + palier).value.trim();
       plateauRewards[palier] = val;
-      if (token) {
+      if (getToken()) {
         const rowMap = { 30:{30:2,60:3,90:4,120:5,135:6,150:7}, 31:{31:2,62:3,93:4,124:5,140:6,155:7} };
         const row = (rowMap[monthMode] || {})[palier];
         if (row) {
-          const plage = `Recompenses!B${row}`;
-          await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${plage}?valueInputOption=RAW`, {
-            method: 'PUT',
-            headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ range: plage, majorDimension: 'ROWS', values: [[val]] })
-          });
+          try { await ecrire(`Recompenses!B${row}`, [[val]]); } catch (e) {}
         }
       }
       const ok = document.getElementById('ok-' + palier);
@@ -677,24 +1238,18 @@
     }
 
     async function chargerPlateau() {
-      const token = getToken();
-      if (!token) return;
-
-      const scoreRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Recap!D7:D37`, {
-        headers: { Authorization: 'Bearer ' + token }
-      });
-      const scoreData = await scoreRes.json();
-      let score = 0;
-      for (const row of (scoreData.values || [])) if (row[0]) score = parseInt(row[0]) || 0;
-      plateauScore = score;
+      if (!getToken()) return;
+      try {
+        const scoreRows = await lire('Recap!D7:D37');
+        let score = 0;
+        for (const row of scoreRows) if (row[0]) score = parseInt(row[0]) || 0;
+        plateauScore = score;
+      } catch (e) {}
 
       try {
-        const rwRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Recompenses!A2:B7`, {
-          headers: { Authorization: 'Bearer ' + token }
-        });
-        const rwData = await rwRes.json();
-        for (const row of (rwData.values || [])) if (row[0] && row[1]) plateauRewards[parseInt(row[0])] = row[1];
-      } catch(e) {}
+        const rwRows = await lire('Recompenses!A2:B7');
+        for (const row of rwRows) if (row[0] && row[1]) plateauRewards[parseInt(row[0])] = row[1];
+      } catch (e) {}
 
       renderPlateau();
     }
@@ -709,7 +1264,10 @@
         window.location.hash = '';
       }
       afficherDate();
+      monthMode = joursDansMois() === 31 ? 31 : 30;
+      majBoutonsMois();
       chargerTaches();
+      chargerMenu();
       construireSeleteurJours();
     };
   </script>
