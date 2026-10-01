@@ -30,12 +30,14 @@
     .connexion-zone { padding: 0 12px; }
     .btn-connexion { display: block; margin: 16px 0; padding: 12px; background: #185FA5; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; width: 100%; }
 
-    /* Menu du jour */
+    /* Menus */
     .menu-card { background: white; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
     .menu-titre { font-size: 12px; font-weight: 600; color: #185FA5; margin-bottom: 6px; }
     .menu-ligne { display: flex; gap: 10px; font-size: 14px; color: #222; padding: 3px 0; }
     .menu-moment { width: 44px; flex-shrink: 0; color: #888; font-size: 12px; padding-top: 2px; }
     .menu-vide { color: #bbb; }
+    .menu-jour { font-size: 11px; font-weight: 600; color: #444; text-transform: uppercase; letter-spacing: 0.5px; margin: 6px 0 2px; }
+    .menu-sep { height: 1px; background: #eee; margin: 8px 0; }
 
     /* Tâches */
     .tache { background: white; border-radius: 10px; margin-bottom: 8px; padding: 14px 12px; display: flex; align-items: center; gap: 12px; border: 1px solid #e8e8e8; }
@@ -192,7 +194,7 @@
   <!-- Vue Aujourd'hui -->
   <div class="vue active" id="vue-aujourd-hui">
     <div class="menu-card" id="menu-card">
-      <div class="menu-titre">🍽 Menu du jour</div>
+      <div class="menu-titre">🍽 Menus</div>
       <div id="menu-contenu"><div class="menu-ligne menu-vide">Chargement...</div></div>
     </div>
     <div id="liste-taches"><div class="vide">Chargement...</div></div>
@@ -399,20 +401,28 @@
       if (nom === 'plateau') chargerPlateau();
     }
 
-    // ── Vue Aujourd'hui : menu du jour ───────────────────
+    // ── Vue Aujourd'hui : menus (aujourd'hui et demain) ──
 
     async function chargerMenu() {
       const zone = document.getElementById('menu-contenu');
       if (!getToken()) { zone.innerHTML = '<div class="menu-ligne menu-vide">Connectez-vous pour voir le menu.</div>'; return; }
       try {
         const rows = await lire('Menus!A2:C8');
-        const idx = (new Date().getDay() + 6) % 7; // lundi = 0
-        const r = rows[idx] || [];
-        const midi = (r[1] || '').toString().trim();
-        const soir = (r[2] || '').toString().trim();
-        const ligne = (label, val) =>
-          `<div class="menu-ligne"><div class="menu-moment">${label}</div><div class="${val ? '' : 'menu-vide'}">${val ? esc(val) : 'Non renseigné'}</div></div>`;
-        zone.innerHTML = ligne('Midi', midi) + ligne('Soir', soir);
+        const idxAujourdhui = (new Date().getDay() + 6) % 7; // lundi = 0
+        const idxDemain = (idxAujourdhui + 1) % 7;           // dimanche -> lundi
+
+        const ligne = (label, val) => {
+          const v = (val || '').toString().trim();
+          return `<div class="menu-ligne"><div class="menu-moment">${label}</div><div class="${v ? '' : 'menu-vide'}">${v ? esc(v) : 'Non renseigné'}</div></div>`;
+        };
+        const bloc = (titre, idx) => {
+          const r = rows[idx] || [];
+          return `<div class="menu-jour">${titre}</div>` + ligne('Midi', r[1]) + ligne('Soir', r[2]);
+        };
+
+        zone.innerHTML = bloc('Aujourd\'hui', idxAujourdhui)
+                       + '<div class="menu-sep"></div>'
+                       + bloc('Demain', idxDemain);
       } catch (e) {
         zone.innerHTML = '<div class="menu-ligne menu-vide">Menu indisponible.</div>';
       }
